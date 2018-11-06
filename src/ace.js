@@ -1,10 +1,10 @@
-import ace from 'brace';
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import isEqual from 'lodash.isequal';
+import ace from "brace";
+import React, { Component } from "react";
+import PropTypes from "prop-types";
+import isEqual from "lodash.isequal";
 
-const { Range } = ace.acequire('ace/range');
-import { editorOptions, editorEvents, debounce } from './editorOptions.js';
+const { Range } = ace.acequire("ace/range");
+import { editorOptions, editorEvents, debounce } from "./editorOptions.js";
 
 export default class ReactAce extends Component {
   constructor(props) {
@@ -24,9 +24,6 @@ export default class ReactAce extends Component {
       focus,
       theme,
       fontSize,
-      value,
-      defaultValue,
-      cursorStart,
       showGutter,
       wrapEnabled,
       showPrintMargin,
@@ -35,7 +32,7 @@ export default class ReactAce extends Component {
       onLoad,
       commands,
       annotations,
-      markers,
+      markers
     } = this.props;
 
     this.editor = ace.edit(this.refEditor);
@@ -49,32 +46,41 @@ export default class ReactAce extends Component {
       this.editor[editorProps[i]] = this.props.editorProps[editorProps[i]];
     }
     if (this.props.debounceChangePeriod) {
-      this.onChange = this.debounce(this.onChange, this.props.debounceChangePeriod);
+      this.onChange = this.debounce(
+        this.onChange,
+        this.props.debounceChangePeriod
+      );
     }
-    this.editor.renderer.setScrollMargin(scrollMargin[0], scrollMargin[1], scrollMargin[2], scrollMargin[3]);
-    this.editor.getSession().setMode(`ace/mode/${mode}`);
-    this.editor.setTheme(`ace/theme/${theme}`);
+    this.editor.renderer.setScrollMargin(
+      scrollMargin[0],
+      scrollMargin[1],
+      scrollMargin[2],
+      scrollMargin[3]
+    );
+    this.editor.getSession().setMode(mode);
+    this.editor.setTheme(theme);
     this.editor.setFontSize(fontSize);
-    this.editor.getSession().setValue(!defaultValue ? value : defaultValue, cursorStart);
     this.editor.navigateFileEnd();
     this.editor.renderer.setShowGutter(showGutter);
     this.editor.getSession().setUseWrapMode(wrapEnabled);
     this.editor.setShowPrintMargin(showPrintMargin);
-    this.editor.on('focus', this.onFocus);
-    this.editor.on('blur', this.onBlur);
-    this.editor.on('copy', this.onCopy);
-    this.editor.on('paste', this.onPaste);
-    this.editor.on('change', this.onChange);
-    this.editor.on('input', this.onInput);
-    this.editor.getSession().selection.on('changeSelection', this.onSelectionChange);
-    this.editor.getSession().selection.on('changeCursor', this.onCursorChange);
+    this.editor.on("focus", this.onFocus);
+    this.editor.on("blur", this.onBlur);
+    this.editor.on("copy", this.onCopy);
+    this.editor.on("paste", this.onPaste);
+    this.editor.on("change", this.onChange);
+    this.editor.on("input", this.onInput);
+    this.editor
+      .getSession()
+      .selection.on("changeSelection", this.onSelectionChange);
+    this.editor.getSession().selection.on("changeCursor", this.onCursorChange);
     if (onValidate) {
-      this.editor.getSession().on('changeAnnotation', () => {
+      this.editor.getSession().on("changeAnnotation", () => {
         const annotations = this.editor.getSession().getAnnotations();
         this.props.onValidate(annotations);
       });
     }
-    this.editor.session.on('changeScrollTop', this.onScroll);
+    this.editor.session.on("changeScrollTop", this.onScroll);
     this.editor.getSession().setAnnotations(annotations || []);
     if (markers && markers.length > 0) {
       this.handleMarkers(markers);
@@ -88,7 +94,7 @@ export default class ReactAce extends Component {
         this.editor.setOption(option, this.props[option]);
       } else if (this.props[option]) {
         console.warn(
-          `ReactAce: editor option ${option} was activated but not found. Did you need to import a related tool or did you possibly mispell the option?`,
+          `ReactAce: editor option ${option} was activated but not found. Did you need to import a related tool or did you possibly mispell the option?`
         );
       }
     }
@@ -96,7 +102,7 @@ export default class ReactAce extends Component {
 
     if (Array.isArray(commands)) {
       commands.forEach(command => {
-        if (typeof command.exec == 'string') {
+        if (typeof command.exec == "string") {
           this.editor.commands.bindKey(command.bindKey, command.exec);
         } else {
           this.editor.commands.addCommand(command);
@@ -105,11 +111,11 @@ export default class ReactAce extends Component {
     }
 
     if (keyboardHandler) {
-      this.editor.setKeyboardHandler('ace/keyboard/' + keyboardHandler);
+      this.editor.setKeyboardHandler("ace/keyboard/" + keyboardHandler);
     }
 
     if (className) {
-      this.refEditor.className += ' ' + className;
+      this.refEditor.className += " " + className;
     }
 
     if (onLoad) {
@@ -136,34 +142,27 @@ export default class ReactAce extends Component {
 
     if (nextProps.className !== oldProps.className) {
       let appliedClasses = this.refEditor.className;
-      let appliedClassesArray = appliedClasses.trim().split(' ');
-      let oldClassesArray = oldProps.className.trim().split(' ');
+      let appliedClassesArray = appliedClasses.trim().split(" ");
+      let oldClassesArray = oldProps.className.trim().split(" ");
       oldClassesArray.forEach(oldClass => {
         let index = appliedClassesArray.indexOf(oldClass);
         appliedClassesArray.splice(index, 1);
       });
-      this.refEditor.className = ' ' + nextProps.className + ' ' + appliedClassesArray.join(' ');
-    }
-
-    // First process editor value, as it may create a new session (see issue #300)
-    if (this.editor && this.editor.getValue() !== nextProps.value) {
-      // editor.setValue is a synchronous function call, change event is emitted before setValue return.
-      this.silent = true;
-      const pos = this.editor.session.selection.toJSON();
-      this.editor.setValue(nextProps.value, nextProps.cursorStart);
-      this.editor.session.selection.fromJSON(pos);
-      this.silent = false;
+      this.refEditor.className =
+        " " + nextProps.className + " " + appliedClassesArray.join(" ");
     }
 
     if (nextProps.mode !== oldProps.mode) {
-      this.editor.getSession().setMode('ace/mode/' + nextProps.mode);
+      this.editor.getSession().setMode(nextProps.mode);
     }
     if (nextProps.theme !== oldProps.theme) {
-      this.editor.setTheme('ace/theme/' + nextProps.theme);
+      this.editor.setTheme(nextProps.theme);
     }
     if (nextProps.keyboardHandler !== oldProps.keyboardHandler) {
       if (nextProps.keyboardHandler) {
-        this.editor.setKeyboardHandler('ace/keyboard/' + nextProps.keyboardHandler);
+        this.editor.setKeyboardHandler(
+          "ace/keyboard/" + nextProps.keyboardHandler
+        );
       } else {
         this.editor.setKeyboardHandler(null);
       }
@@ -186,7 +185,10 @@ export default class ReactAce extends Component {
     if (!isEqual(nextProps.annotations, oldProps.annotations)) {
       this.editor.getSession().setAnnotations(nextProps.annotations || []);
     }
-    if (!isEqual(nextProps.markers, oldProps.markers) && Array.isArray(nextProps.markers)) {
+    if (
+      !isEqual(nextProps.markers, oldProps.markers) &&
+      Array.isArray(nextProps.markers)
+    ) {
       this.handleMarkers(nextProps.markers);
     }
 
@@ -195,7 +197,10 @@ export default class ReactAce extends Component {
       this.handleScrollMargins(nextProps.scrollMargin);
     }
 
-    if (prevProps.height !== this.props.height || prevProps.width !== this.props.width) {
+    if (
+      prevProps.height !== this.props.height ||
+      prevProps.width !== this.props.width
+    ) {
       this.editor.resize();
     }
     if (this.props.focus && !prevProps.focus) {
@@ -204,7 +209,12 @@ export default class ReactAce extends Component {
   }
 
   handleScrollMargins(margins = [0, 0, 0, 0]) {
-    this.editor.renderer.setScrollMargins(margins[0], margins[1], margins[2], margins[3]);
+    this.editor.renderer.setScrollMargins(
+      margins[0],
+      margins[1],
+      margins[2],
+      margins[3]
+    );
   }
 
   componentWillUnmount() {
@@ -289,10 +299,20 @@ export default class ReactAce extends Component {
       }
     }
     // add new markers
-    markers.forEach(({ startRow, startCol, endRow, endCol, className, type, inFront = false }) => {
-      const range = new Range(startRow, startCol, endRow, endCol);
-      this.editor.getSession().addMarker(range, className, type, inFront);
-    });
+    markers.forEach(
+      ({
+        startRow,
+        startCol,
+        endRow,
+        endCol,
+        className,
+        type,
+        inFront = false
+      }) => {
+        const range = new Range(startRow, startCol, endRow, endCol);
+        this.editor.getSession().addMarker(range, className, type, inFront);
+      }
+    );
   }
 
   updateRef(item) {
@@ -323,7 +343,6 @@ ReactAce.propTypes = {
   onInput: PropTypes.func,
   onBlur: PropTypes.func,
   onScroll: PropTypes.func,
-  value: PropTypes.string,
   defaultValue: PropTypes.string,
   onLoad: PropTypes.func,
   onSelectionChange: PropTypes.func,
@@ -346,19 +365,24 @@ ReactAce.propTypes = {
   markers: PropTypes.array,
   keyboardHandler: PropTypes.string,
   wrapEnabled: PropTypes.bool,
-  enableBasicAutocompletion: PropTypes.oneOfType([PropTypes.bool, PropTypes.array]),
-  enableLiveAutocompletion: PropTypes.oneOfType([PropTypes.bool, PropTypes.array]),
-  commands: PropTypes.array,
+  enableBasicAutocompletion: PropTypes.oneOfType([
+    PropTypes.bool,
+    PropTypes.array
+  ]),
+  enableLiveAutocompletion: PropTypes.oneOfType([
+    PropTypes.bool,
+    PropTypes.array
+  ]),
+  commands: PropTypes.array
 };
 
 ReactAce.defaultProps = {
-  name: 'brace-editor',
+  name: "brace-editor",
   focus: false,
-  mode: '',
-  theme: '',
-  height: '500px',
-  width: '500px',
-  value: '',
+  mode: "",
+  theme: "",
+  height: "500px",
+  width: "500px",
   fontSize: 12,
   showGutter: true,
   onChange: null,
@@ -378,5 +402,5 @@ ReactAce.defaultProps = {
   setOptions: {},
   wrapEnabled: false,
   enableBasicAutocompletion: false,
-  enableLiveAutocompletion: false,
+  enableLiveAutocompletion: false
 };

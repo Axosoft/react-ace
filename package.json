@@ -1,6 +1,6 @@
 {
-  "name": "react-ace",
-  "version": "6.2.1",
+  "name": "@axosoft/react-ace",
+  "version": "6.2.1-alpha.1",
   "description": "A react component for Ace Editor",
   "main": "lib/index.js",
   "types": "types.d.ts",
@@ -98,6 +98,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "http://github.com/securingsincity/react-ace.git"
+    "url": "http://github.com/Axosoft/react-ace.git"
   }
 }
